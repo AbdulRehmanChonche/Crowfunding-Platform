@@ -1,0 +1,8 @@
+Commands to install requirements: (npm install)
+
+Command to run Server : (node server.js)
+
+  Role        |  User          |  Password
+  Admin       |  admin         |  admin123
+  Campaign    | creator        | create123
+  Donor       |  donor         |donor123
