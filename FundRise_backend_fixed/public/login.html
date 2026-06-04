@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FundRise – Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --sky:#87CEEB; --green:#2ecc71; --green-dark:#27ae60; --card:#ECF0F1; --inner:rgba(178,226,246,0.7); --text:#2c3e50; --muted:#7f8c8d; }
+    body { min-height:100vh; display:flex; justify-content:center; align-items:center; background:linear-gradient(135deg,#87CEEB 0%,#b8e4f7 50%,#74b9e8 100%); font-family:'DM Sans',sans-serif; overflow:hidden; position:relative; }
+    .particle { position:absolute; background:rgba(255,255,255,0.75); border-radius:50%; animation:float linear infinite; z-index:0; pointer-events:none; }
+    @keyframes float { 0%{transform:translateY(100vh) scale(0);opacity:0} 10%{opacity:1} 90%{opacity:.6} 100%{transform:translateY(-10vh) scale(1);opacity:0} }
+    .brand { text-align:center; margin-bottom:18px; }
+    .brand-logo { font-size:38px; line-height:1; }
+    .brand h1 { font-family:'Playfair Display',serif; font-size:26px; color:var(--green-dark); }
+    .brand p { font-size:12px; color:var(--muted); margin-top:3px; }
+    .login-wrap { position:relative; z-index:1; background:var(--card); border:2px solid wheat; border-radius:28px; padding:28px 20px; width:90%; max-width:360px; display:flex; flex-direction:column; align-items:center; box-shadow:0 20px 60px rgba(0,0,0,.12); animation:slideUp .5s ease; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+    .logt { background:var(--inner); border-radius:20px; border:1px solid white; padding:20px; width:100%; }
+    label { font-size:12px; font-weight:600; color:var(--muted); letter-spacing:.5px; text-transform:uppercase; }
+    select, input { width:100%; height:46px; margin:8px 0 14px; border:2px solid #dde3e8; border-radius:30px; padding:0 16px; font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text); background:white; transition:border-color .2s; outline:none; }
+    select:focus, input:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(46,204,113,.15); }
+    .btn { width:100%; height:50px; background:linear-gradient(135deg,var(--green),var(--green-dark)); color:white; border:none; border-radius:30px; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:700; cursor:pointer; margin:6px 0; box-shadow:0 4px 15px rgba(46,204,113,.35); transition:transform .15s,box-shadow .15s; }
+    .btn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(46,204,113,.4); }
+    .btn:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+    .footer-txt { text-align:center; margin-top:14px; font-size:13px; color:var(--muted); }
+    .footer-txt a { color:var(--green-dark); font-weight:600; text-decoration:none; }
+    .toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(80px); background:#2c3e50; color:white; padding:12px 28px; border-radius:30px; font-size:14px; font-weight:500; transition:transform .3s; z-index:999; white-space:nowrap; }
+    .toast.show { transform:translateX(-50%) translateY(0); }
+    .toast.success { background:var(--green-dark); }
+    .toast.error { background:#e74c3c; }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="brand">
+      <div class="brand-logo">🌱</div>
+      <h1>FundRise</h1>
+      <p>Crowdfunding for causes that matter</p>
+    </div>
+    <form class="logt" onsubmit="login(event)">
+      <label for="RoleType">User Type</label>
+      <select id="RoleType" required>
+        <option value="">Select user type</option>
+        <option value="Admin">Admin</option>
+        <option value="Donor">Donor</option>
+        <option value="Campaign">Campaign Creator</option>
+      </select>
+      <label for="username">Username</label>
+      <input type="text" id="username" placeholder="Enter username" required>
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Enter password" required>
+      <button class="btn" type="submit" id="loginBtn">LOGIN 🔐</button>
+    </form>
+    <p class="footer-txt">New here? <a href="register.html">Create an account 🚀</a></p>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = 'http://localhost:3000/api';
+
+    function showToast(msg, type='') {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.className = 'toast ' + type + ' show';
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    async function login(e) {
+      e.preventDefault();
+      const role     = document.getElementById('RoleType').value;
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const btn      = document.getElementById('loginBtn');
+
+      if (!role) { showToast('Please select a user type', 'error'); return; }
+
+      btn.disabled = true; btn.textContent = 'Logging in…';
+
+      try {
+        const res  = await fetch(`${API}/login`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ username, password, role })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          showToast('Login successful! Redirecting…', 'success');
+          localStorage.setItem('fundrise_role', data.user.role);
+          localStorage.setItem('fundrise_user', data.user.username);
+          localStorage.setItem('fundrise_uid',  data.user.id);
+          setTimeout(() => {
+            if (role === 'Admin')    window.location.href = 'admin.html';
+            else if (role === 'Campaign') window.location.href = 'create-campaign.html';
+            else window.location.href = 'index.html';
+          }, 1200);
+        } else {
+          showToast(data.message || 'Invalid credentials.', 'error');
+          document.getElementById('password').value = '';
+        }
+      } catch (err) {
+        showToast('Could not reach server. Is it running?', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'LOGIN 🔐';
+      }
+    }
+
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div'); p.classList.add('particle');
+      const size = Math.random() * 7 + 4;
+      p.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}vw;top:${Math.random()*100}vh;animation-duration:${Math.random()*6+6}s;animation-delay:${Math.random()*8}s;opacity:${Math.random()*.6+.2}`;
+      document.body.appendChild(p);
+    }
+  </script>
+</body>
+</html>

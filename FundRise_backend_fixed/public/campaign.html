@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FundRise – Campaign</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root { --green:#2ecc71; --green-dark:#27ae60; --text:#2c3e50; --muted:#7f8c8d; --bg:#f4f8fb; }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    nav { background:linear-gradient(135deg,#87CEEB,#74b9e8); padding:0 24px; height:64px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 2px 16px rgba(0,0,0,.1); }
+    .nav-brand { font-family:'Playfair Display',serif; font-size:22px; color:var(--green-dark); text-decoration:none; }
+    .back-btn { padding:8px 18px; border-radius:24px; border:2px solid white; color:white; background:transparent; font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; }
+    .back-btn:hover { background:white; color:var(--green-dark); }
+    .container { max-width:800px; margin:40px auto; padding:0 24px 60px; }
+    .camp-hero { border-radius:24px; height:220px; display:flex; align-items:center; justify-content:center; font-size:96px; margin-bottom:28px; position:relative; }
+    .camp-badge { position:absolute; top:16px; right:16px; background:white; border-radius:20px; padding:6px 14px; font-size:12px; font-weight:700; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+    h1 { font-family:'Playfair Display',serif; font-size:clamp(22px,4vw,32px); margin-bottom:8px; }
+    .meta { font-size:13px; color:var(--muted); margin-bottom:24px; }
+    .meta span { font-weight:600; color:var(--text); }
+    .progress-bar { height:10px; background:#eee; border-radius:6px; overflow:hidden; margin:12px 0 8px; }
+    .progress-fill { height:100%; border-radius:6px; background:linear-gradient(90deg,var(--green),var(--green-dark)); }
+    .prog-stats { display:flex; justify-content:space-between; font-size:13px; margin-bottom:28px; }
+    .prog-raised { font-weight:700; color:var(--green-dark); font-size:20px; }
+    .section-title { font-size:14px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; }
+    .story { font-size:15px; line-height:1.8; color:var(--text); margin-bottom:32px; white-space:pre-line; }
+    .donate-box { background:white; border-radius:20px; padding:24px; box-shadow:0 4px 20px rgba(0,0,0,.07); margin-bottom:32px; }
+    .donate-box h3 { font-family:'Playfair Display',serif; font-size:20px; margin-bottom:16px; }
+    .amounts { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+    .amt-btn { padding:10px 20px; border-radius:24px; border:2px solid #dde3e8; background:white; font-size:14px; font-weight:600; cursor:pointer; transition:all .2s; }
+    .amt-btn:hover, .amt-btn.selected { border-color:var(--green); background:rgba(46,204,113,.1); color:var(--green-dark); }
+    .custom-input { width:100%; height:48px; border:2px solid #dde3e8; border-radius:30px; padding:0 18px; font-size:15px; font-family:'DM Sans',sans-serif; outline:none; margin-bottom:16px; }
+    .custom-input:focus { border-color:var(--green); }
+    .donate-btn { width:100%; height:52px; background:linear-gradient(135deg,var(--green),var(--green-dark)); color:white; border:none; border-radius:30px; font-size:16px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; box-shadow:0 4px 15px rgba(46,204,113,.35); transition:transform .15s; }
+    .donate-btn:hover { transform:translateY(-2px); }
+    .donate-btn:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+    .donors-list { background:white; border-radius:20px; padding:24px; box-shadow:0 4px 20px rgba(0,0,0,.07); }
+    .donor-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #f0f0f0; font-size:14px; }
+    .donor-row:last-child { border-bottom:none; }
+    .donor-name { font-weight:600; }
+    .donor-amt { color:var(--green-dark); font-weight:700; }
+    .donor-time { font-size:12px; color:var(--muted); }
+    .empty-donors { text-align:center; color:var(--muted); padding:20px 0; }
+    .toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(80px); background:#2c3e50; color:white; padding:12px 28px; border-radius:30px; font-size:14px; font-weight:500; transition:transform .3s; z-index:999; }
+    .toast.show { transform:translateX(-50%) translateY(0); }
+    .toast.success { background:var(--green-dark); }
+    .toast.error { background:#e74c3c; }
+    .spinner { width:32px; height:32px; border:3px solid #dde3e8; border-top-color:var(--green); border-radius:50%; animation:spin .8s linear infinite; margin:40px auto; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* ── QR PAYMENT MODAL (FIX #5) ── */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:500; opacity:0; pointer-events:none; transition:opacity .25s; }
+    .modal-overlay.open { opacity:1; pointer-events:all; }
+    .modal { background:white; border-radius:24px; padding:32px; max-width:420px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.25); transform:translateY(20px); transition:transform .25s; }
+    .modal-overlay.open .modal { transform:translateY(0); }
+    .modal h2 { font-family:'Playfair Display',serif; font-size:22px; margin-bottom:6px; color:var(--text); }
+    .modal .modal-amount { font-size:32px; font-weight:800; color:var(--green-dark); font-family:'Playfair Display',serif; margin-bottom:4px; }
+    .modal .modal-sub { font-size:13px; color:var(--muted); margin-bottom:20px; }
+    #qrCanvas { margin:0 auto 18px; display:flex; justify-content:center; }
+    #qrCanvas canvas, #qrCanvas img { border-radius:12px; border:3px solid #e8f5e9; }
+    .modal-steps { background:#f8fffe; border-radius:14px; padding:14px 18px; text-align:left; margin-bottom:20px; }
+    .modal-steps ol { padding-left:18px; }
+    .modal-steps li { font-size:13px; color:var(--text); margin-bottom:6px; line-height:1.5; }
+    .modal-steps li:last-child { margin-bottom:0; }
+    .modal-confirm-btn { width:100%; height:52px; background:linear-gradient(135deg,var(--green),var(--green-dark)); color:white; border:none; border-radius:30px; font-size:16px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; box-shadow:0 4px 15px rgba(46,204,113,.35); margin-bottom:10px; transition:transform .15s; }
+    .modal-confirm-btn:hover { transform:translateY(-2px); }
+    .modal-confirm-btn:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+    .modal-cancel-btn { background:none; border:none; color:var(--muted); font-size:14px; cursor:pointer; font-family:'DM Sans',sans-serif; padding:4px; }
+    .modal-cancel-btn:hover { color:var(--text); }
+    .donor-only-note { background:#fff8e1; border:1px solid #ffe082; border-radius:12px; padding:12px 16px; font-size:13px; color:#795548; margin-bottom:16px; }
+  </style>
+</head>
+<body>
+<nav>
+  <a class="nav-brand" href="index.html">🌱 FundRise</a>
+  <a class="back-btn" href="index.html">← Back</a>
+</nav>
+
+<div class="container" id="content"><div class="spinner"></div></div>
+<div class="toast" id="toast"></div>
+
+<!-- QR PAYMENT MODAL -->
+<div class="modal-overlay" id="payModal">
+  <div class="modal">
+    <h2>Scan & Pay 📱</h2>
+    <div class="modal-amount" id="modalAmt">₹0</div>
+    <div class="modal-sub" id="modalCampName">—</div>
+    <div id="qrCanvas"></div>
+    <div class="modal-steps">
+      <ol>
+        <li>Open any UPI app (GPay, PhonePe, Paytm…)</li>
+        <li>Scan the QR code above</li>
+        <li>Confirm the amount and complete payment</li>
+        <li>Enter the 12-digit UTR (Transaction) ID below</li>
+      </ol>
+    </div>
+    <div style="margin-bottom: 20px;">
+      <input class="custom-input" id="utrInput" type="text" placeholder="Enter 12-digit UPI UTR ID" maxlength="12" style="text-align:center; font-weight:600; letter-spacing:1px; margin-bottom:0;">
+    </div>
+    <button class="modal-confirm-btn" id="confirmPayBtn" onclick="confirmPayment()">✅ Payment Done – Record Donation</button>
+    <button class="modal-cancel-btn" onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<script>
+  const API   = 'http://localhost:3000/api';
+  const role  = localStorage.getItem('fundrise_role');
+  const uid   = localStorage.getItem('fundrise_uid');
+  const uname = localStorage.getItem('fundrise_user') || 'Anonymous';
+  const params  = new URLSearchParams(location.search);
+  const campId  = params.get('id');
+
+  let selectedAmount  = 0;
+  let pendingDonation = null; // holds { campaign_id, donor_id, donor_name, amount }
+  let qrInstance      = null;
+  let campaignUpiId   = null;
+
+  function showToast(msg, type='') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast ' + type + ' show';
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  function selectAmt(val, el) {
+    selectedAmount = val;
+    document.querySelectorAll('.amt-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('customAmt').value = val;
+  }
+
+  /* FIX #5 – open QR modal, generate QR for exact amount */
+  function openPaymentModal(campTitle) {
+    const raw = document.getElementById('customAmt').value;
+    const amt = parseFloat(raw);
+    if (!amt || amt < 10) { showToast('Minimum donation is ₹10', 'error'); return; }
+
+    selectedAmount = amt;
+    pendingDonation = { campaign_id: campId, donor_id: uid || null, donor_name: uname, amount: amt };
+
+    document.getElementById('modalAmt').textContent  = '₹' + Number(amt).toLocaleString('en-IN');
+    document.getElementById('modalCampName').textContent = 'for ' + campTitle;
+    document.getElementById('utrInput').value = '';
+
+    // Build UPI deep-link so QR is pre-filled with the exact amount
+    const upiId = campaignUpiId || '7676579421@axl';
+    const upiLink = `upi://pay?pa=${upiId}&pn=FundRise&am=${amt}&cu=INR&tn=${encodeURIComponent('Donation: ' + campTitle)}`;
+
+    // Clear previous QR
+    const qrDiv = document.getElementById('qrCanvas');
+    qrDiv.innerHTML = '';
+    qrInstance = new QRCode(qrDiv, {
+      
+      text:   upiLink,
+      width:  200,
+      height: 200,
+      correctLevel: QRCode.CorrectLevel.M
+    });
+
+    document.getElementById('payModal').classList.add('open');
+    document.getElementById('confirmPayBtn').disabled = false;
+    document.getElementById('confirmPayBtn').textContent = '✅ Payment Done – Record Donation';
+  }
+
+  function closeModal() {
+    document.getElementById('payModal').classList.remove('open');
+    pendingDonation = null;
+  }
+
+  // Close modal when clicking backdrop
+  document.getElementById('payModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  /* FIX #5 – only record donation AFTER user confirms payment */
+  async function confirmPayment() {
+    if (!pendingDonation) return;
+
+    const utrVal = document.getElementById('utrInput').value.trim();
+    if (!utrVal) {
+      showToast('Please enter the 12-digit UPI UTR ID.', 'error');
+      return;
+    }
+    if (!/^\d{12}$/.test(utrVal)) {
+      showToast('UTR ID must be exactly 12 digits.', 'error');
+      return;
+    }
+
+    pendingDonation.utr_id = utrVal;
+
+    const btn = document.getElementById('confirmPayBtn');
+    btn.disabled = true;
+    btn.textContent = 'Recording donation…';
+
+    try {
+      const res  = await fetch(`${API}/donate`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(pendingDonation)
+      });
+      const data = await res.json();
+      if (data.success) {
+        closeModal();
+        showToast('Thank you for your donation! 💚', 'success');
+        setTimeout(() => location.reload(), 1500);
+      } else {
+        showToast(data.message || 'Donation failed.', 'error');
+        btn.disabled = false;
+        btn.textContent = '✅ Payment Done – Record Donation';
+      }
+    } catch (e) {
+      showToast('Server error. Please try again.', 'error');
+      btn.disabled = false;
+      btn.textContent = '✅ Payment Done – Record Donation';
+    }
+  }
+
+  async function loadCampaign() {
+    if (!campId) { document.getElementById('content').innerHTML = '<p style="text-align:center;padding:40px">Campaign not found.</p>'; return; }
+    try {
+      const [campRes, donRes] = await Promise.all([
+        fetch(`${API}/campaigns/${campId}`),
+        fetch(`${API}/campaigns/${campId}/donations`)
+      ]);
+      const campData = await campRes.json();
+      const donData  = await donRes.json();
+
+      if (!campData.success) { document.getElementById('content').innerHTML = '<p style="text-align:center;padding:40px">Campaign not found.</p>'; return; }
+
+      const c   = campData.campaign;
+      campaignUpiId = c.upi_id;
+      const pct = Math.min(100, Math.round(c.raised / c.goal * 100));
+      const badgeMap = { urgent:'🔥 Urgent', trending:'📈 Trending', new:'✨ New' };
+      const badgeHtml = c.badge ? `<div class="camp-badge">${badgeMap[c.badge] || c.badge}</div>` : '';
+
+      const donors = donData.success ? donData.donations : [];
+      const donorRows = donors.length
+        ? donors.slice(0, 10).map(d => `
+            <div class="donor-row">
+              <div><div class="donor-name">👤 ${d.donor_name}</div><div class="donor-time">${new Date(d.donated_at).toLocaleDateString('en-IN')}</div></div>
+              <div class="donor-amt">₹${Number(d.amount).toLocaleString('en-IN')}</div>
+            </div>`).join('')
+        : '<div class="empty-donors">Be the first to donate! 💚</div>';
+
+      // Only Donors see the donation box
+      const isDonor = (role === 'Donor');
+      const donateBoxHtml = isDonor ? `
+        <div class="donate-box">
+          <h3>Make a Donation 💚</h3>
+          <div class="amounts">
+            <button class="amt-btn" onclick="selectAmt(100,this)">₹100</button>
+            <button class="amt-btn" onclick="selectAmt(500,this)">₹500</button>
+            <button class="amt-btn" onclick="selectAmt(1000,this)">₹1,000</button>
+            <button class="amt-btn" onclick="selectAmt(5000,this)">₹5,000</button>
+          </div>
+          <input class="custom-input" id="customAmt" type="number" placeholder="Enter custom amount (₹)" min="10">
+          <button class="donate-btn" id="donateBtn" onclick="openPaymentModal('${c.title.replace(/'/g,"\\'")}')">Donate Now 💚</button>
+        </div>` :
+        `<div class="donor-only-note">ℹ️ Only registered donors can make donations. <a href="login.html" style="color:var(--green-dark);font-weight:600">Login as Donor</a> to contribute.</div>`;
+
+      document.getElementById('content').innerHTML = `
+        <div class="camp-hero" style="background:${c.color}">${c.emoji}${badgeHtml}</div>
+        <div class="meta">📂 ${c.category} &nbsp;·&nbsp; 👤 <span>${c.creator}</span> &nbsp;·&nbsp; ⏳ <span>${c.days_left} days left</span></div>
+        <h1>${c.title}</h1>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <div class="prog-stats">
+          <span class="prog-raised">₹${Number(c.raised).toLocaleString('en-IN')} raised</span>
+          <span style="color:var(--muted)">${pct}% of ₹${Number(c.goal).toLocaleString('en-IN')}</span>
+        </div>
+        <div class="section-title">About this campaign</div>
+        <div class="story">${c.full_desc || c.short_desc}</div>
+        ${donateBoxHtml}
+        <div class="donors-list">
+          <div class="section-title" style="margin-bottom:16px">Recent Donors</div>
+          ${donorRows}
+        </div>`;
+    } catch (e) {
+      document.getElementById('content').innerHTML = '<p style="text-align:center;padding:40px">⚠️ Could not load campaign. Is the server running?</p>';
+    }
+  }
+
+  loadCampaign();
+</script>
+</body>
+</html>

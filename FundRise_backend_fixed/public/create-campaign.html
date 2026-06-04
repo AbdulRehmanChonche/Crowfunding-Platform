@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FundRise – Create Campaign</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root { --green:#2ecc71; --green-dark:#27ae60; --text:#2c3e50; --muted:#7f8c8d; --bg:#f4f8fb; --card:#fff; --accent:#3498db; }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    nav { background:linear-gradient(135deg,#87CEEB,#74b9e8); padding:0 24px; height:64px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 2px 16px rgba(0,0,0,.1); }
+    .nav-brand { font-family:'Playfair Display',serif; font-size:22px; color:var(--green-dark); display:flex; align-items:center; gap:8px; text-decoration:none; }
+    .nav-btn { padding:8px 18px; border-radius:24px; border:2px solid white; background:transparent; color:white; font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; text-decoration:none; display:inline-block; transition:all .2s; }
+    .nav-btn:hover { background:white; color:var(--green-dark); }
+    .page-hero { background:linear-gradient(135deg,#87CEEB,#b8e4f7); padding:40px 24px; text-align:center; }
+    .page-hero h1 { font-family:'Playfair Display',serif; font-size:clamp(24px,4vw,38px); color:var(--green-dark); margin-bottom:8px; }
+    .page-hero p { font-size:15px; color:var(--text); opacity:.8; }
+    .steps-bar { display:flex; justify-content:center; padding:24px; max-width:700px; margin:0 auto; }
+    .step-item { display:flex; align-items:center; flex:1; }
+    .step-circle { width:36px; height:36px; border-radius:50%; border:3px solid #dde3e8; background:white; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:var(--muted); transition:all .3s; flex-shrink:0; }
+    .step-circle.active { border-color:var(--green); background:var(--green); color:white; }
+    .step-circle.done { border-color:var(--green-dark); background:var(--green-dark); color:white; }
+    .step-label { font-size:11px; font-weight:600; color:var(--muted); margin-left:8px; white-space:nowrap; }
+    .step-label.active { color:var(--green-dark); }
+    .step-line { flex:1; height:3px; background:#dde3e8; margin:0 8px; transition:background .3s; }
+    .step-line.done { background:var(--green-dark); }
+    .form-container { max-width:700px; margin:0 auto; padding:0 24px 60px; }
+    .form-section { background:white; border-radius:20px; padding:28px; margin-bottom:24px; box-shadow:0 4px 20px rgba(0,0,0,.06); display:none; animation:slideIn .35s ease; }
+    .form-section.active { display:block; }
+    @keyframes slideIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    .section-header { display:flex; align-items:center; gap:12px; margin-bottom:24px; padding-bottom:16px; border-bottom:2px solid #f0f0f0; }
+    .section-icon { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--green),var(--green-dark)); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+    .section-header h2 { font-family:'Playfair Display',serif; font-size:20px; }
+    .section-header p { font-size:13px; color:var(--muted); }
+    .field { margin-bottom:20px; }
+    label { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:6px; }
+    .required::after { content:' *'; color:#e74c3c; }
+    input, select, textarea { width:100%; padding:12px 16px; border:2px solid #eee; border-radius:14px; font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text); background:white; outline:none; transition:border-color .2s; }
+    input:focus, select:focus, textarea:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(46,204,113,.12); }
+    textarea { resize:vertical; min-height:120px; }
+    .char-count { text-align:right; font-size:11px; color:var(--muted); margin-top:4px; }
+    .row-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .emoji-picker { display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; }
+    .emoji-opt { width:48px; height:48px; border-radius:12px; border:2px solid #eee; background:white; font-size:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .2s; }
+    .emoji-opt:hover, .emoji-opt.selected { border-color:var(--green); background:rgba(46,204,113,.08); transform:scale(1.1); }
+    .color-picker { display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; }
+    .color-opt { width:36px; height:36px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:transform .2s; }
+    .color-opt:hover, .color-opt.selected { border-color:var(--text); transform:scale(1.2); }
+    .preview-card { border-radius:16px; overflow:hidden; border:2px solid #eee; max-width:300px; margin:16px auto 0; }
+    .preview-hero { height:140px; display:flex; align-items:center; justify-content:center; font-size:56px; }
+    .preview-body { padding:14px; background:white; }
+    .preview-category { font-size:10px; color:var(--muted); font-weight:700; text-transform:uppercase; }
+    .preview-title { font-family:'Playfair Display',serif; font-size:16px; margin:4px 0; }
+    .preview-desc { font-size:12px; color:var(--muted); line-height:1.5; }
+    .btn-row { display:flex; gap:12px; justify-content:flex-end; margin-top:24px; }
+    .btn-secondary { padding:12px 28px; border-radius:30px; border:2px solid #dde3e8; background:white; color:var(--text); font-size:14px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .2s; }
+    .btn-secondary:hover { border-color:var(--green); color:var(--green-dark); }
+    .btn-primary { padding:12px 32px; border-radius:30px; background:linear-gradient(135deg,var(--green),var(--green-dark)); color:white; border:none; font-size:14px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; box-shadow:0 4px 14px rgba(46,204,113,.35); transition:transform .15s,box-shadow .15s; }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(46,204,113,.4); }
+    .review-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .review-item { background:var(--bg); border-radius:12px; padding:12px 16px; }
+    .review-item .rlabel { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+    .review-item .rval { font-size:14px; font-weight:600; margin-top:3px; word-break:break-word; }
+    .success-screen { text-align:center; padding:40px 20px; display:none; }
+    .success-screen.show { display:block; animation:slideIn .4s ease; }
+    .success-icon { font-size:72px; margin-bottom:16px; }
+    .success-screen h2 { font-family:'Playfair Display',serif; font-size:28px; color:var(--green-dark); margin-bottom:10px; }
+    .success-screen p { font-size:15px; color:var(--muted); line-height:1.7; margin-bottom:24px; }
+    .toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(80px); background:#2c3e50; color:white; padding:12px 28px; border-radius:30px; font-size:14px; font-weight:500; transition:transform .3s; z-index:999; white-space:nowrap; }
+    .toast.show { transform:translateX(-50%) translateY(0); }
+    .toast.error { background:#e74c3c; }
+    .toast.success { background:var(--green-dark); }
+    @media(max-width:600px){ .row-2{grid-template-columns:1fr;} .review-grid{grid-template-columns:1fr;} .step-label{display:none;} }
+  </style>
+</head>
+<body>
+<nav>
+  <a class="nav-brand" href="index.html">🌱 FundRise</a>
+  <a class="nav-btn" href="index.html">← Back</a>
+</nav>
+<div class="page-hero">
+  <h1>🚀 Launch Your Campaign</h1>
+  <p>Create a compelling campaign and start raising funds in minutes</p>
+</div>
+<div class="steps-bar">
+  <div class="step-item"><div class="step-circle active" id="sc1">1</div><span class="step-label active" id="sl1">Basics</span></div>
+  <div class="step-line" id="line1"></div>
+  <div class="step-item"><div class="step-circle" id="sc2">2</div><span class="step-label" id="sl2">Details</span></div>
+  <div class="step-line" id="line2"></div>
+  <div class="step-item"><div class="step-circle" id="sc3">3</div><span class="step-label" id="sl3">Visuals</span></div>
+  <div class="step-line" id="line3"></div>
+  <div class="step-item"><div class="step-circle" id="sc4">4</div><span class="step-label" id="sl4">Review</span></div>
+</div>
+<div class="form-container">
+  <div class="form-section active" id="step1">
+    <div class="section-header"><div class="section-icon">📋</div><div><h2>Campaign Basics</h2><p>Tell us the essentials</p></div></div>
+    <div class="field"><label class="required">Campaign Title</label><input type="text" id="cTitle" placeholder="e.g. Clean Water for 12 Villages" maxlength="80" oninput="updatePreview();updateCount('cTitle','tc1',80)"><div class="char-count"><span id="tc1">0</span>/80</div></div>
+    <div class="row-2">
+      <div class="field"><label class="required">Category</label><select id="cCategory" onchange="updatePreview()"><option value="">Select category</option><option>Education</option><option>Health</option><option>Environment</option><option>Community</option><option>Tech</option><option>Disaster Relief</option><option>Animal Welfare</option><option>Arts & Culture</option></select></div>
+      <div class="field"><label class="required">Funding Goal (₹)</label><input type="number" id="cGoal" placeholder="e.g. 100000" min="1000"></div>
+    </div>
+    <div class="row-2">
+      <div class="field"><label class="required">Duration</label><select id="cDuration"><option value="15">15 days</option><option value="30" selected>30 days</option><option value="45">45 days</option><option value="60">60 days</option><option value="90">90 days</option></select></div>
+      <div class="field"><label class="required">Your / Org Name</label><input type="text" id="cCreator" placeholder="e.g. AquaLife NGO"></div>
+    </div>
+    <div class="btn-row"><button class="btn-primary" onclick="goStep(2)">Next: Add Details →</button></div>
+  </div>
+  <div class="form-section" id="step2">
+    <div class="section-header"><div class="section-icon">📝</div><div><h2>Campaign Details</h2><p>Help donors understand your cause</p></div></div>
+    <div class="field"><label class="required">Short Description</label><textarea id="cShortDesc" placeholder="1-2 sentences summarizing your campaign." maxlength="160" oninput="updatePreview();updateCount('cShortDesc','tc2',160)"></textarea><div class="char-count"><span id="tc2">0</span>/160</div></div>
+    <div class="field"><label class="required">Full Story</label><textarea id="cFullDesc" placeholder="Tell your full story. What problem are you solving? Who benefits? How will funds be used?" style="min-height:200px;" maxlength="2000" oninput="updateCount('cFullDesc','tc3',2000)"></textarea><div class="char-count"><span id="tc3">0</span>/2000</div></div>
+    <div class="row-2">
+      <div class="field"><label>Contact Email</label><input type="email" id="cEmail" placeholder="contact@yourorg.com"></div>
+      <div class="field"><label>Website / Social</label><input type="url" id="cWebsite" placeholder="https://yourorg.com"></div>
+    </div>
+    <div class="field"><label class="required">UPI ID (for receiving donor funds directly)</label><input type="text" id="cUpiId" placeholder="e.g. orgname@upi or 7676579421@axl" required></div>
+    <div class="btn-row"><button class="btn-secondary" onclick="goStep(1)">← Back</button><button class="btn-primary" onclick="goStep(3)">Next: Visuals →</button></div>
+  </div>
+  <div class="form-section" id="step3">
+    <div class="section-header"><div class="section-icon">🎨</div><div><h2>Campaign Visuals</h2><p>Pick an icon and color theme</p></div></div>
+    <div class="field"><label>Campaign Icon</label><div class="emoji-picker" id="emojiPicker"></div></div>
+    <div class="field"><label>Card Background Color</label><div class="color-picker" id="colorPicker"></div></div>
+    <div class="field"><label>Live Preview</label>
+      <div class="preview-card"><div class="preview-hero" id="previewHero" style="background:#FFF3CD">📚</div><div class="preview-body"><div class="preview-category" id="previewCat">CATEGORY</div><div class="preview-title" id="previewTitle">Your Campaign Title</div><div class="preview-desc" id="previewDesc">Your short description will appear here...</div></div></div>
+    </div>
+    <div class="btn-row"><button class="btn-secondary" onclick="goStep(2)">← Back</button><button class="btn-primary" onclick="goStep(4)">Next: Review →</button></div>
+  </div>
+  <div class="form-section" id="step4">
+    <div class="section-header"><div class="section-icon">✅</div><div><h2>Review & Launch</h2><p>Confirm everything looks good</p></div></div>
+    <div class="review-grid" id="reviewGrid"></div>
+    <div style="margin-top:20px;background:rgba(46,204,113,.08);border-radius:14px;padding:16px;border:1px solid rgba(46,204,113,.25);margin-top:16px;">
+      <p style="font-size:13px;line-height:1.8;color:var(--text)">✅ By submitting, you confirm all information is accurate and funds will be used as stated.<br>✅ FundRise will review your campaign within 24 hours before it goes live.<br>✅ You will receive an email confirmation once approved.</p>
+    </div>
+    <div class="btn-row"><button class="btn-secondary" onclick="goStep(3)">← Back</button><button class="btn-primary" onclick="submitCampaign()">🚀 Launch Campaign</button></div>
+  </div>
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">🎉</div>
+    <h2>Campaign Submitted!</h2>
+    <p>Your campaign has been submitted for review. Our team will verify it within 24 hours. Get ready to make a difference!</p>
+    <a href="index.html" style="padding:14px 32px;background:linear-gradient(135deg,#2ecc71,#27ae60);color:white;border-radius:30px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block;box-shadow:0 4px 14px rgba(46,204,113,.35)">🌱 Explore Campaigns</a>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  let selectedEmoji='📚', selectedColor='#FFF3CD', currentStep=1;
+  const emojis=['📚','💧','☀️','👩‍💻','🍲','🌳','❤️','📖','🎨','🏥','🏗️','🐾','🎭','🌍','🔬','🤝'];
+  const colors=['#FFF3CD','#D1ECF1','#FFF9C4','#E8D5F5','#FDECEA','#D4EDDA','#FEF3E2','#E3F2FD','#FCE4EC','#E8F5E9'];
+  document.getElementById('emojiPicker').innerHTML=emojis.map((e,i)=>`<div class="emoji-opt${i===0?' selected':''}" onclick="pickEmoji('${e}',this)">${e}</div>`).join('');
+  document.getElementById('colorPicker').innerHTML=colors.map((c,i)=>`<div class="color-opt${i===0?' selected':''}" style="background:${c}" data-color="${c}" onclick="pickColor(this)"></div>`).join('');
+  function pickEmoji(e,el){document.querySelectorAll('.emoji-opt').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');selectedEmoji=e;updatePreview();}
+  function pickColor(el){document.querySelectorAll('.color-opt').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');selectedColor=el.dataset.color;updatePreview();}
+  function updatePreview(){
+    document.getElementById('previewHero').textContent=selectedEmoji;
+    document.getElementById('previewHero').style.background=selectedColor;
+    document.getElementById('previewTitle').textContent=document.getElementById('cTitle').value||'Your Campaign Title';
+    document.getElementById('previewCat').textContent=document.getElementById('cCategory').value||'CATEGORY';
+    const sd=document.getElementById('cShortDesc');
+    if(sd)document.getElementById('previewDesc').textContent=sd.value||'Your short description will appear here...';
+  }
+  function updateCount(fid,cid,max){document.getElementById(cid).textContent=document.getElementById(fid).value.length;}
+  function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type+' show';setTimeout(()=>t.classList.remove('show'),2800);}
+  const validations={
+    1:()=>{if(!document.getElementById('cTitle').value.trim())return'Please enter a campaign title.';if(!document.getElementById('cCategory').value)return'Please select a category.';if(!document.getElementById('cGoal').value||+document.getElementById('cGoal').value<1000)return'Goal must be at least ₹1,000.';if(!document.getElementById('cCreator').value.trim())return'Please enter your / org name.';return null;},
+    2:()=>{if(!document.getElementById('cShortDesc').value.trim())return'Please write a short description.';if(document.getElementById('cFullDesc').value.trim().length<50)return'Full story must be at least 50 characters.';const upi=document.getElementById('cUpiId').value.trim();if(!upi)return'Please enter your UPI ID.';if(!/^[\w.\-_]{2,256}@[\w.\-_]{2,64}$/.test(upi))return'Please enter a valid UPI ID (e.g. name@upi).';return null;},
+    3:()=>null
+  };
+  function goStep(n){
+    if(n>currentStep){const err=validations[currentStep]?.();if(err){showToast(err,'error');return;}}
+    document.getElementById('step'+currentStep).classList.remove('active');
+    for(let i=1;i<=4;i++){const sc=document.getElementById('sc'+i),sl=document.getElementById('sl'+i);if(i<n){sc.className='step-circle done';sc.textContent='✓';sl.className='step-label';}else if(i===n){sc.className='step-circle active';sc.textContent=i;sl.className='step-label active';}else{sc.className='step-circle';sc.textContent=i;sl.className='step-label';}if(i<4)document.getElementById('line'+i).className='step-line'+(i<n?' done':'');}
+    currentStep=n;if(n===4)buildReview();document.getElementById('step'+n).classList.add('active');window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function buildReview(){
+    const items=[{label:'Title',val:document.getElementById('cTitle').value},{label:'Category',val:document.getElementById('cCategory').value},{label:'Goal',val:'₹'+(+document.getElementById('cGoal').value).toLocaleString('en-IN')},{label:'Duration',val:document.getElementById('cDuration').value+' days'},{label:'Creator',val:document.getElementById('cCreator').value},{label:'UPI ID',val:document.getElementById('cUpiId').value},{label:'Icon',val:selectedEmoji},{label:'Email',val:document.getElementById('cEmail').value||'—'},{label:'Website',val:document.getElementById('cWebsite').value||'—'}];
+    document.getElementById('reviewGrid').innerHTML=items.map(i=>`<div class="review-item"><div class="rlabel">${i.label}</div><div class="rval">${i.val}</div></div>`).join('');
+  }
+  async function submitCampaign(){
+    const btn = document.querySelector('.btn-primary');
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    const body = {
+      title:      document.getElementById('cTitle').value,
+      category:   document.getElementById('cCategory').value,
+      goal:       +document.getElementById('cGoal').value,
+      duration:   +document.getElementById('cDuration').value,
+      creator:    document.getElementById('cCreator').value,
+      creator_id: localStorage.getItem('fundrise_uid') || null,
+      short_desc: document.getElementById('cShortDesc').value,
+      full_desc:  document.getElementById('cFullDesc').value,
+      email:      document.getElementById('cEmail').value,
+      website:    document.getElementById('cWebsite').value,
+      emoji:      selectedEmoji,
+      color:      selectedColor,
+      upi_id:     document.getElementById('cUpiId').value.trim()
+    };
+    try {
+      const res  = await fetch('http://localhost:3000/api/campaigns', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('step4').classList.remove('active');
+        document.getElementById('successScreen').classList.add('show');
+        window.scrollTo({top:0,behavior:'smooth'});
+      } else {
+        showToast(data.message || 'Submission failed.', 'error');
+      }
+    } catch(e) {
+      showToast('Cannot reach server. Is it running?', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = '🚀 Launch Campaign';
+    }
+  }
+</script>
+</body>
+</html>

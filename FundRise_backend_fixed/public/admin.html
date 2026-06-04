@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FundRise – Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root { --green:#2ecc71; --green-dark:#27ae60; --text:#2c3e50; --muted:#7f8c8d; --bg:#f4f8fb; --accent:#3498db; --warn:#e67e22; --danger:#e74c3c; --purple:#9b59b6; }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    nav { background:linear-gradient(135deg,#87CEEB,#74b9e8); padding:0 24px; height:64px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 2px 16px rgba(0,0,0,.1); }
+    .nav-brand { font-family:'Playfair Display',serif; font-size:22px; color:var(--green-dark); text-decoration:none; display:flex; align-items:center; gap:8px; }
+    .nav-right { display:flex; align-items:center; gap:12px; }
+    .admin-badge { background:rgba(231,76,60,.15); color:#c0392b; border:1px solid rgba(231,76,60,.3); padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; }
+    .nav-logout { padding:8px 18px; border-radius:24px; border:2px solid white; background:transparent; color:white; font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; text-decoration:none; transition:all .2s; }
+    .nav-logout:hover { background:white; color:var(--green-dark); }
+    .layout { display:grid; grid-template-columns:220px 1fr; min-height:calc(100vh - 64px); }
+    .sidebar { background:white; border-right:1px solid #eee; padding:20px 0; }
+    .sidebar-item { display:flex; align-items:center; gap:10px; padding:12px 20px; font-size:14px; font-weight:500; color:var(--muted); cursor:pointer; transition:all .2s; border-left:3px solid transparent; }
+    .sidebar-item:hover { background:#f8fffe; color:var(--green-dark); border-left-color:var(--green); }
+    .sidebar-item.active { background:rgba(46,204,113,.08); color:var(--green-dark); border-left-color:var(--green); font-weight:700; }
+    .sidebar-icon { font-size:18px; width:24px; text-align:center; }
+    .sidebar-section { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; padding:16px 20px 6px; }
+    .main { padding:28px; overflow-y:auto; }
+    .page { display:none; animation:fadeIn .3s ease; }
+    .page.active { display:block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+    .page-header h1 { font-family:'Playfair Display',serif; font-size:26px; }
+    .page-header p { font-size:13px; color:var(--muted); margin-top:2px; }
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+    .stat-card { background:white; border-radius:16px; padding:20px; box-shadow:0 2px 12px rgba(0,0,0,.06); border-left:4px solid transparent; }
+    .stat-card.green { border-left-color:var(--green); }
+    .stat-card.blue { border-left-color:var(--accent); }
+    .stat-card.orange { border-left-color:var(--warn); }
+    .stat-card.purple { border-left-color:var(--purple); }
+    .stat-label { font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+    .stat-value { font-family:'Playfair Display',serif; font-size:28px; font-weight:800; }
+    .stat-sub { font-size:12px; color:var(--muted); margin-top:4px; }
+    .stat-sub .up { color:var(--green); font-weight:600; }
+    .card { background:white; border-radius:16px; padding:20px; box-shadow:0 2px 12px rgba(0,0,0,.06); margin-bottom:20px; }
+    .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .card-title { font-size:16px; font-weight:700; }
+    .card-action { font-size:13px; color:var(--accent); cursor:pointer; font-weight:600; }
+    table { width:100%; border-collapse:collapse; }
+    th { text-align:left; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; padding:10px 12px; border-bottom:2px solid #f0f0f0; }
+    td { padding:12px; font-size:13px; border-bottom:1px solid #f8f8f8; vertical-align:middle; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:#fafffe; }
+    .campaign-name { font-weight:600; }
+    .campaign-creator { font-size:12px; color:var(--muted); }
+    .badge { padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:4px; }
+    .badge.active { background:rgba(46,204,113,.12); color:var(--green-dark); }
+    .badge.pending { background:rgba(230,126,34,.12); color:var(--warn); }
+    .badge.rejected { background:rgba(231,76,60,.12); color:var(--danger); }
+    .badge.completed { background:rgba(52,152,219,.12); color:var(--accent); }
+    .mini-progress { height:6px; background:#eee; border-radius:3px; overflow:hidden; width:100px; }
+    .mini-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--green),var(--green-dark)); }
+    .action-btns { display:flex; gap:6px; flex-wrap:wrap; }
+    .act-btn { padding:5px 12px; border-radius:16px; font-size:11px; font-weight:700; cursor:pointer; border:none; font-family:'DM Sans',sans-serif; transition:all .15s; }
+    .act-btn.approve { background:rgba(46,204,113,.12); color:var(--green-dark); }
+    .act-btn.approve:hover { background:var(--green); color:white; }
+    .act-btn.reject { background:rgba(231,76,60,.1); color:var(--danger); }
+    .act-btn.reject:hover { background:var(--danger); color:white; }
+    .act-btn.view { background:rgba(52,152,219,.1); color:var(--accent); }
+    .act-btn.view:hover { background:var(--accent); color:white; }
+    .act-btn.delete { background:rgba(231,76,60,.1); color:var(--danger); }
+    .act-btn.delete:hover { background:var(--danger); color:white; }
+    .chart-wrap { position:relative; height:180px; display:flex; align-items:flex-end; gap:10px; padding:0 4px; }
+    .bar-group { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+    .bar { width:100%; border-radius:6px 6px 0 0; background:linear-gradient(180deg,var(--green),var(--green-dark)); transition:height .6s ease; cursor:pointer; }
+    .bar:hover { opacity:.8; }
+    .bar-label { font-size:10px; color:var(--muted); font-weight:600; }
+    .bar-val { font-size:10px; color:var(--green-dark); font-weight:700; }
+    .avatar { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:12px; font-weight:700; flex-shrink:0; }
+    .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+    .filter-btn { padding:6px 14px; border-radius:20px; border:2px solid #eee; background:white; font-size:12px; font-weight:600; color:var(--muted); cursor:pointer; transition:all .2s; font-family:'DM Sans',sans-serif; }
+    .filter-btn.active, .filter-btn:hover { border-color:var(--green); color:var(--green-dark); background:rgba(46,204,113,.06); }
+    .search-row { display:flex; gap:12px; margin-bottom:16px; }
+    .search-input { flex:1; padding:10px 16px; border:2px solid #eee; border-radius:12px; font-size:13px; font-family:'DM Sans',sans-serif; color:var(--text); outline:none; transition:border-color .2s; }
+    .search-input:focus { border-color:var(--green); }
+    .toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(80px); background:#2c3e50; color:white; padding:12px 28px; border-radius:30px; font-size:14px; font-weight:500; transition:transform .3s; z-index:999; white-space:nowrap; }
+    .toast.show { transform:translateX(-50%) translateY(0); }
+    .toast.success { background:var(--green-dark); }
+    .toast.error { background:var(--danger); }
+    @media(max-width:768px){
+      .layout{grid-template-columns:1fr;}
+      .sidebar{display:flex;overflow-x:auto;padding:0;border-right:none;border-bottom:1px solid #eee;}
+      .sidebar-item{flex-direction:column;gap:4px;padding:12px 14px;font-size:11px;border-left:none;border-bottom:3px solid transparent;white-space:nowrap;}
+      .sidebar-item.active{border-bottom-color:var(--green);border-left-color:transparent;}
+      .sidebar-section{display:none;}
+      .stats-grid{grid-template-columns:1fr 1fr;}
+      .main{padding:16px;}
+    }
+    @media(max-width:480px){.stats-grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<nav>
+  <a class="nav-brand" href="index.html">🌱 FundRise</a>
+  <div class="nav-right">
+    <span class="admin-badge">⚙️ Admin Panel</span>
+    <a class="nav-logout" href="login.html" onclick="localStorage.clear()">Logout</a>
+  </div>
+</nav>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">Overview</div>
+    <div class="sidebar-item active" onclick="showPage('overview',this)"><span class="sidebar-icon">📊</span> Dashboard</div>
+    <div class="sidebar-section">Manage</div>
+    <div class="sidebar-item" onclick="showPage('campaigns',this)"><span class="sidebar-icon">🚀</span> Campaigns</div>
+    <div class="sidebar-item" onclick="showPage('pending',this)"><span class="sidebar-icon">⏳</span> Pending <span id="pendingBadge" style="margin-left:auto;background:#e67e22;color:white;border-radius:10px;padding:1px 7px;font-size:11px;"></span></div>
+    <div class="sidebar-item" onclick="showPage('donors',this)"><span class="sidebar-icon">💚</span> Donors</div>
+    <div class="sidebar-section">Reports</div>
+    <div class="sidebar-item" onclick="showPage('analytics',this)"><span class="sidebar-icon">📈</span> Analytics</div>
+  </aside>
+  <main class="main">
+    <div class="page active" id="page-overview">
+      <div class="page-header"><div><h1>Welcome back, Admin 👋</h1><p>Here's what's happening on FundRise today</p></div></div>
+      <div class="stats-grid">
+        <div class="stat-card green"><div class="stat-label">Total Raised</div><div class="stat-value">₹24.6L</div><div class="stat-sub"><span class="up">↑ 12%</span> vs last month</div></div>
+        <div class="stat-card blue"><div class="stat-label">Active Campaigns</div><div class="stat-value">148</div><div class="stat-sub"><span class="up">↑ 8</span> new this week</div></div>
+        <div class="stat-card orange"><div class="stat-label">Pending Review</div><div class="stat-value" id="pendingCount">3</div><div class="stat-sub">Requires your action</div></div>
+        <div class="stat-card purple"><div class="stat-label">Total Donors</div><div class="stat-value">9,241</div><div class="stat-sub"><span class="up">↑ 5%</span> this month</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card"><div class="card-header"><span class="card-title">Monthly Fundraising (₹L)</span></div><div class="chart-wrap" id="mainChart"></div></div>
+        <div class="card"><div class="card-header"><span class="card-title">Category Breakdown</span></div><div id="catBreakdown"></div></div>
+      </div>
+      <div class="card"><div class="card-header"><span class="card-title">Recent Campaigns</span></div><table id="recentTable"></table></div>
+    </div>
+    <div class="page" id="page-campaigns">
+      <div class="page-header"><div><h1>All Campaigns 🚀</h1><p>Manage all campaigns on the platform</p></div></div>
+      <div class="search-row"><input class="search-input" type="text" placeholder="🔍 Search campaigns…" oninput="filterTable(this.value)"></div>
+      <div class="filter-bar" id="campFilterBar">
+        <button class="filter-btn active" onclick="setCampFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setCampFilter('active',this)">Active</button>
+        <button class="filter-btn" onclick="setCampFilter('pending',this)">Pending</button>
+        <button class="filter-btn" onclick="setCampFilter('completed',this)">Completed</button>
+        <button class="filter-btn" onclick="setCampFilter('rejected',this)">Rejected</button>
+      </div>
+      <div class="card"><table id="campaignsTable"></table></div>
+    </div>
+    <div class="page" id="page-pending">
+      <div class="page-header"><div><h1>Pending Review ⏳</h1><p>Campaigns awaiting your approval</p></div></div>
+      <div id="pendingList"></div>
+    </div>
+    <div class="page" id="page-donors">
+      <div class="page-header"><div><h1>Donors 💚</h1><p>All platform donors and their activity</p></div></div>
+      <div class="card"><table id="donorsTable"></table></div>
+    </div>
+    <div class="page" id="page-analytics">
+      <div class="page-header"><div><h1>Analytics 📈</h1><p>Platform performance overview</p></div></div>
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card green"><div class="stat-label">Avg Donation</div><div class="stat-value">₹1,240</div><div class="stat-sub"><span class="up">↑ 4%</span></div></div>
+        <div class="stat-card blue"><div class="stat-label">Success Rate</div><div class="stat-value">94%</div><div class="stat-sub">Campaigns fully funded</div></div>
+        <div class="stat-card purple"><div class="stat-label">Repeat Donors</div><div class="stat-value">63%</div><div class="stat-sub"><span class="up">↑ 2%</span></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="card"><div class="card-header"><span class="card-title">Weekly Donations</span></div><div class="chart-wrap" id="weeklyChart"></div></div>
+        <div class="card"><div class="card-header"><span class="card-title">Top Performing Categories</span></div><div id="topCats"></div></div>
+      </div>
+      <div class="card"><div class="card-header"><span class="card-title">Donor Acquisition (Last 6 Months)</span></div><div class="chart-wrap" id="acquisitionChart"></div></div>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  if(localStorage.getItem('fundrise_role')!=='Admin') window.location.href='login.html';
+  const API = 'http://localhost:3000/api';
+  let CAMPAIGNS = [];
+  let DONORS = [];
+  const AVATAR_COLORS = ['#2ecc71','#3498db','#e67e22','#9b59b6','#e74c3c','#1abc9c','#f39c12','#95a5a6'];
+  async function loadDonors() {
+    try {
+      const res  = await fetch(`${API}/users`);
+      const data = await res.json();
+      if (data.success) { DONORS = data.users; renderDonorsTable(); }
+    } catch(e) { showToast('Could not load donors.', ''); }
+  }
+  async function loadAllCampaigns() {
+    try {
+      const res  = await fetch(`${API}/campaigns/all`);
+      const data = await res.json();
+      if (data.success) {
+        CAMPAIGNS = data.campaigns.map(c => ({...c, submittedAt: c.submitted_at || '', desc: c.short_desc}));
+        renderRecentTable();
+        updatePendingCount();
+      }
+    } catch(e) { showToast('Cannot connect to server.', ''); }
+  }
+  let campFilter='all';
+  function showPage(id,el){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.sidebar-item').forEach(s=>s.classList.remove('active'));
+    document.getElementById('page-'+id).classList.add('active');
+    if(el)el.classList.add('active');
+    if(id==='campaigns')renderCampaignsTable(CAMPAIGNS);
+    if(id==='donors'){loadDonors();}
+    if(id==='pending')renderPending();
+    if(id==='analytics')renderAnalytics();
+  }
+  function statusBadge(s){const map={active:'✅ Active',pending:'⏳ Pending',rejected:'❌ Rejected',completed:'🏁 Completed'};return `<span class="badge ${s}">${map[s]||s}</span>`;}
+  function renderRecentTable(){
+    const rows=CAMPAIGNS.slice(0,5).map(c=>{const pct=Math.min(100,Math.round(c.raised/c.goal*100));return`<tr><td><div class="campaign-name">${c.title}</div><div class="campaign-creator">${c.creator}</div></td><td>${c.category}</td><td>${statusBadge(c.status)}</td><td><div class="mini-progress"><div class="mini-fill" style="width:${pct}%"></div></div><div style="font-size:11px;color:var(--muted);margin-top:3px">${pct}%</div></td><td style="font-weight:700;color:var(--green-dark)">₹${c.raised.toLocaleString('en-IN')}</td></tr>`;}).join('');
+    document.getElementById('recentTable').innerHTML=`<thead><tr><th>Campaign</th><th>Category</th><th>Status</th><th>Progress</th><th>Raised</th></tr></thead><tbody>${rows}</tbody>`;
+  }
+  function renderCampaignsTable(list){
+    const rows=list.map(c=>{const pct=Math.min(100,Math.round(c.raised/c.goal*100));return`<tr><td><div class="campaign-name">${c.title}</div><div class="campaign-creator">${c.creator} · ${c.submittedAt}</div></td><td>${c.category}</td><td>${statusBadge(c.status)}</td><td><div class="mini-progress"><div class="mini-fill" style="width:${pct}%"></div></div><div style="font-size:11px;color:var(--muted);margin-top:3px">${pct}%</div></td><td style="font-weight:700;color:var(--green-dark)">₹${c.raised.toLocaleString('en-IN')}</td><td><div class="action-btns">${c.status==='pending'?`<button class="act-btn approve" onclick="approveCamp(${c.id})">Approve</button><button class="act-btn reject" onclick="rejectCamp(${c.id})">Reject</button>`:''}${c.status==='active'?`<button class="act-btn" style="background:rgba(52,152,219,.12);color:var(--accent)" onclick="completeCamp(${c.id})">Complete</button>`:''}<button class="act-btn delete" onclick="deleteCamp(${c.id})">Delete</button></div></td></tr>`;}).join('');
+    document.getElementById('campaignsTable').innerHTML=`<thead><tr><th>Campaign</th><th>Category</th><th>Status</th><th>Progress</th><th>Raised</th><th>Actions</th></tr></thead><tbody>${rows}</tbody>`;
+  }
+  function setCampFilter(f,el){document.querySelectorAll('#campFilterBar .filter-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');campFilter=f;const filtered=f==='all'?CAMPAIGNS:CAMPAIGNS.filter(c=>c.status===f);renderCampaignsTable(filtered);}
+  function filterTable(q){const filtered=CAMPAIGNS.filter(c=>(campFilter==='all'||c.status===campFilter)&&(c.title.toLowerCase().includes(q.toLowerCase())||c.creator.toLowerCase().includes(q.toLowerCase())));renderCampaignsTable(filtered);}
+  async function approveCamp(id){
+    await fetch(`${API}/campaigns/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'active'})});
+    await loadAllCampaigns(); renderCampaignsTable(CAMPAIGNS); renderPending(); showToast('Campaign approved! ✅','success');
+  }
+  async function rejectCamp(id){
+    await fetch(`${API}/campaigns/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'rejected'})});
+    await loadAllCampaigns(); renderCampaignsTable(CAMPAIGNS); renderPending(); showToast('Campaign rejected.','');
+  }
+  async function completeCamp(id){
+    if(!confirm('Mark this campaign as Completed?'))return;
+    await fetch(`${API}/campaigns/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'completed'})});
+    await loadAllCampaigns(); renderCampaignsTable(campFilter==='all'?CAMPAIGNS:CAMPAIGNS.filter(c=>c.status===campFilter)); showToast('Campaign marked as Completed! 🏁','success');
+  }
+  async function deleteCamp(id){
+    if(!confirm('Delete this campaign?'))return;
+    await fetch(`${API}/campaigns/${id}`,{method:'DELETE'});
+    await loadAllCampaigns(); renderCampaignsTable(CAMPAIGNS); showToast('Campaign deleted.','');
+  }
+  function renderPending(){
+    const pending=CAMPAIGNS.filter(c=>c.status==='pending');
+    const el=document.getElementById('pendingList');
+    if(!pending.length){el.innerHTML='<div class="card" style="text-align:center;padding:40px;color:var(--muted)">🎉 No pending campaigns!</div>';return;}
+    el.innerHTML=pending.map(c=>`<div class="card" style="margin-bottom:16px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap"><div><div style="font-weight:700;font-size:16px;margin-bottom:4px">${c.title}</div><div style="font-size:13px;color:var(--muted);margin-bottom:8px">by ${c.creator} · ${c.category} · Submitted ${c.submittedAt}</div><div style="font-size:13px;color:var(--text);margin-bottom:8px">${c.desc||'No description provided.'}</div><div style="font-size:13px"><span style="font-weight:700">Goal:</span> ₹${c.goal.toLocaleString('en-IN')} over ${c.duration||30} days</div></div><div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end"><button class="act-btn approve" style="padding:10px 20px;font-size:13px" onclick="approveCamp(${c.id})">✅ Approve</button><button class="act-btn reject" style="padding:10px 20px;font-size:13px" onclick="rejectCamp(${c.id})">❌ Reject</button></div></div></div>`).join('');
+  }
+  function renderDonorsTable(){
+    if(!DONORS.length){
+      document.getElementById('donorsTable').innerHTML='<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted)">No donors found.</td></tr>';
+      return;
+    }
+    const rows=DONORS.map((d,i)=>{
+      const color=AVATAR_COLORS[i%AVATAR_COLORS.length];
+      const name=`${d.fname} ${d.lname}`;
+      const initial=d.fname?d.fname[0].toUpperCase():'?';
+      const lastDate=d.last_donated?new Date(d.last_donated).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'Never';
+      return `<tr>
+        <td><div style="display:flex;align-items:center;gap:10px">
+          <div class="avatar" style="background:${color}">${initial}</div>
+          <div><div style="font-weight:600">${name}</div><div style="font-size:12px;color:var(--muted)">${d.email}</div></div>
+        </div></td>
+        <td style="font-weight:700;color:var(--green-dark)">₹${Number(d.total_donated).toLocaleString('en-IN')}</td>
+        <td>${d.donation_count} donation${d.donation_count!==1?'s':''}</td>
+        <td style="color:var(--muted);font-size:13px">${lastDate}</td>
+        <td><button class="act-btn view" onclick="showToast('Viewing ${name}...')">View</button></td>
+      </tr>`;
+    }).join('');
+    document.getElementById('donorsTable').innerHTML=`<thead><tr><th>Donor</th><th>Total Given</th><th>Donations</th><th>Last Active</th><th>Action</th></tr></thead><tbody>${rows}</tbody>`;
+  }
+  function renderChart(containerId,data,maxVal){
+    const el=document.getElementById(containerId);const max=maxVal||Math.max(...data.map(d=>d.val));
+    el.innerHTML=data.map(d=>{const h=Math.round((d.val/max)*140);return`<div class="bar-group"><div class="bar-val">${d.label2||''}</div><div class="bar" style="height:${h}px" title="${d.label}: ${d.label2}"></div><div class="bar-label">${d.label}</div></div>`;}).join('');
+  }
+  function renderCatBreakdown(){
+    const cats=[{name:'Health',pct:28,color:'#e74c3c'},{name:'Education',pct:24,color:'#3498db'},{name:'Environment',pct:18,color:'#2ecc71'},{name:'Tech',pct:16,color:'#9b59b6'},{name:'Community',pct:14,color:'#e67e22'}];
+    document.getElementById('catBreakdown').innerHTML=cats.map(c=>`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="font-weight:600">${c.name}</span><span style="color:var(--muted)">${c.pct}%</span></div><div style="height:8px;background:#eee;border-radius:4px;overflow:hidden"><div style="height:100%;width:${c.pct*3.5}%;background:${c.color};border-radius:4px;transition:width .8s ease"></div></div></div>`).join('');
+  }
+  function renderAnalytics(){
+    renderChart('weeklyChart',[{label:'Mon',label2:'₹1.2L',val:1.2},{label:'Tue',label2:'₹0.8L',val:0.8},{label:'Wed',label2:'₹2.1L',val:2.1},{label:'Thu',label2:'₹1.5L',val:1.5},{label:'Fri',label2:'₹3.0L',val:3.0},{label:'Sat',label2:'₹2.4L',val:2.4},{label:'Sun',label2:'₹1.8L',val:1.8}],3.5);
+    renderChart('acquisitionChart',[{label:'Dec',label2:'820',val:820},{label:'Jan',label2:'1040',val:1040},{label:'Feb',label2:'980',val:980},{label:'Mar',label2:'1320',val:1320},{label:'Apr',label2:'1580',val:1580},{label:'May',label2:'1200',val:1200}],1800);
+    const cats=[{name:'Health',campaigns:42,raised:'₹8.4L',color:'#e74c3c'},{name:'Education',campaigns:36,raised:'₹5.9L',color:'#3498db'},{name:'Environment',campaigns:28,raised:'₹4.4L',color:'#2ecc71'},{name:'Tech',campaigns:22,raised:'₹3.9L',color:'#9b59b6'},{name:'Community',campaigns:20,raised:'₹2.0L',color:'#e67e22'}];
+    document.getElementById('topCats').innerHTML=cats.map((c,i)=>`<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f5f5f5"><div style="width:28px;height:28px;border-radius:8px;background:${c.color};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px">${i+1}</div><div style="flex:1"><div style="font-weight:600;font-size:14px">${c.name}</div><div style="font-size:12px;color:var(--muted)">${c.campaigns} campaigns</div></div><div style="font-weight:700;color:var(--green-dark)">${c.raised}</div></div>`).join('');
+  }
+  function updatePendingCount(){const n=CAMPAIGNS.filter(c=>c.status==='pending').length;document.getElementById('pendingCount').textContent=n;document.getElementById('pendingBadge').textContent=n>0?n:'';}
+  function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type+' show';setTimeout(()=>t.classList.remove('show'),2500);}
+  renderChart('mainChart',[{label:'Nov',label2:'₹2.1L',val:2.1},{label:'Dec',label2:'₹3.4L',val:3.4},{label:'Jan',label2:'₹2.8L',val:2.8},{label:'Feb',label2:'₹4.2L',val:4.2},{label:'Mar',label2:'₹3.9L',val:3.9},{label:'Apr',label2:'₹5.1L',val:5.1},{label:'May',label2:'₹4.6L',val:4.6}],6);
+  loadAllCampaigns().then(() => { renderCatBreakdown(); renderRecentTable(); updatePendingCount(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FundRise – Register</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root { --sky:#87CEEB; --green:#2ecc71; --green-dark:#27ae60; --card:#ECF0F1; --inner:rgba(178,226,246,0.7); --text:#2c3e50; --muted:#7f8c8d; }
+    body { min-height:100vh; display:flex; justify-content:center; align-items:center; background:linear-gradient(135deg,#87CEEB 0%,#b8e4f7 50%,#74b9e8 100%); font-family:'DM Sans',sans-serif; overflow-x:hidden; padding:30px 0; }
+    .particle { position:fixed; background:rgba(255,255,255,0.75); border-radius:50%; animation:float linear infinite; z-index:0; pointer-events:none; }
+    @keyframes float { 0%{transform:translateY(100vh);opacity:0} 10%{opacity:1} 90%{opacity:.5} 100%{transform:translateY(-10vh);opacity:0} }
+    .register-wrap { position:relative; z-index:1; background:var(--card); border:2px solid wheat; border-radius:28px; padding:28px 20px; width:90%; max-width:400px; box-shadow:0 20px 60px rgba(0,0,0,.12); animation:slideUp .5s ease; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+    .brand { text-align:center; margin-bottom:18px; }
+    .brand-logo { font-size:34px; }
+    .brand h1 { font-family:'Playfair Display',serif; font-size:24px; color:var(--green-dark); }
+    .brand p { font-size:12px; color:var(--muted); margin-top:3px; }
+    .logt { background:var(--inner); border-radius:20px; border:1px solid white; padding:20px; }
+    .row-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    label { font-size:11px; font-weight:600; color:var(--muted); letter-spacing:.5px; text-transform:uppercase; display:block; margin-bottom:4px; }
+    select, input { width:100%; height:44px; border:2px solid #dde3e8; border-radius:30px; padding:0 14px; font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); background:white; outline:none; transition:border-color .2s; margin-bottom:12px; }
+    select:focus, input:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(46,204,113,.15); }
+    textarea { width:100%; height:80px; border:2px solid #dde3e8; border-radius:16px; padding:10px 14px; font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); background:white; outline:none; resize:none; transition:border-color .2s; margin-bottom:12px; }
+    textarea:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(46,204,113,.15); }
+    .btn { width:100%; height:50px; background:linear-gradient(135deg,var(--green),var(--green-dark)); color:white; border:none; border-radius:30px; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 15px rgba(46,204,113,.35); transition:transform .15s,box-shadow .15s; margin-top:4px; }
+    .btn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(46,204,113,.4); }
+    .btn:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+    .footer-txt { text-align:center; margin-top:14px; font-size:13px; color:var(--muted); }
+    .footer-txt a { color:var(--green-dark); font-weight:600; text-decoration:none; }
+    .section-title { font-size:13px; font-weight:700; color:var(--text); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+    .divider { height:1px; background:rgba(255,255,255,.7); margin:14px 0; }
+    .password-strength { height:4px; border-radius:2px; margin:-8px 0 12px; background:#eee; overflow:hidden; }
+    .password-strength-bar { height:100%; width:0; border-radius:2px; transition:width .3s,background .3s; }
+    .toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(80px); background:#2c3e50; color:white; padding:12px 28px; border-radius:30px; font-size:14px; font-weight:500; transition:transform .3s; z-index:999; white-space:nowrap; }
+    .toast.show { transform:translateX(-50%) translateY(0); }
+    .toast.success { background:var(--green-dark); }
+    .toast.error { background:#e74c3c; }
+  </style>
+</head>
+<body>
+  <div class="register-wrap">
+    <div class="brand">
+      <div class="brand-logo">🌱</div>
+      <h1>FundRise</h1>
+      <p>Create your free account</p>
+    </div>
+    <form class="logt" onsubmit="register(event)">
+      <p class="section-title">👤 Account Details</p>
+      <label>User Type</label>
+      <select id="role" required onchange="toggleBio()">
+        <option value="">Select user type</option>
+        <option value="Donor">Donor</option>
+        <option value="Campaign">Campaign Creator</option>
+      </select>
+      <div class="row-2">
+        <div><label>First Name</label><input type="text" id="fname" placeholder="Jane" required></div>
+        <div><label>Last Name</label><input type="text" id="lname" placeholder="Doe" required></div>
+      </div>
+      <label>Email</label>
+      <input type="email" id="email" placeholder="jane@example.com" required>
+      <label>Username</label>
+      <input type="text" id="username" placeholder="janedoe" required>
+      <div class="divider"></div>
+      <p class="section-title">🔒 Security</p>
+      <label>Password</label>
+      <input type="password" id="password" placeholder="Min 6 characters" required oninput="checkStrength(this.value)">
+      <div class="password-strength"><div class="password-strength-bar" id="strengthBar"></div></div>
+      <label>Confirm Password</label>
+      <input type="password" id="confirm" placeholder="Repeat password" required>
+      <div id="bio-section" style="display:none">
+        <div class="divider"></div>
+        <p class="section-title">🚀 Campaign Creator Info</p>
+        <label>Organization / Name</label>
+        <input type="text" id="org" placeholder="Your org or full name">
+        <label>Brief Bio</label>
+        <textarea id="bio" placeholder="Tell donors about yourself…"></textarea>
+      </div>
+      <button class="btn" type="submit" id="regBtn">CREATE ACCOUNT 🚀</button>
+    </form>
+    <p class="footer-txt">Already have an account? <a href="login.html">Sign in 🔐</a></p>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = 'http://localhost:3000/api';
+
+    function toggleBio() {
+      document.getElementById('bio-section').style.display =
+        document.getElementById('role').value === 'Campaign' ? 'block' : 'none';
+    }
+    function checkStrength(pwd) {
+      const bar = document.getElementById('strengthBar');
+      let s = 0;
+      if (pwd.length >= 6) s++;
+      if (/[A-Z]/.test(pwd)) s++;
+      if (/[0-9]/.test(pwd)) s++;
+      if (/[^A-Za-z0-9]/.test(pwd)) s++;
+      bar.style.width = (s * 25) + '%';
+      bar.style.background = ['#e74c3c','#e67e22','#f1c40f','#2ecc71'][s - 1] || '#eee';
+    }
+    function showToast(msg, type='') {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.className = 'toast ' + type + ' show';
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+    async function register(e) {
+      e.preventDefault();
+      const pwd  = document.getElementById('password').value;
+      const conf = document.getElementById('confirm').value;
+      if (pwd.length < 6)   { showToast('Password must be at least 6 characters', 'error'); return; }
+      if (pwd !== conf)      { showToast('Passwords do not match', 'error'); return; }
+
+      const btn = document.getElementById('regBtn');
+      btn.disabled = true; btn.textContent = 'Creating…';
+
+      const body = {
+        role:     document.getElementById('role').value,
+        fname:    document.getElementById('fname').value.trim(),
+        lname:    document.getElementById('lname').value.trim(),
+        email:    document.getElementById('email').value.trim(),
+        username: document.getElementById('username').value.trim(),
+        password: pwd,
+        org:      document.getElementById('org')?.value.trim() || '',
+        bio:      document.getElementById('bio')?.value.trim() || '',
+      };
+
+      try {
+        const res  = await fetch(`${API}/register`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Account created! Redirecting to login…', 'success');
+          setTimeout(() => window.location.href = 'login.html', 1500);
+        } else {
+          showToast(data.message || 'Registration failed.', 'error');
+        }
+      } catch (err) {
+        showToast('Could not reach server. Is it running?', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'CREATE ACCOUNT 🚀';
+      }
+    }
+    for (let i = 0; i < 35; i++) {
+      const p = document.createElement('div'); p.classList.add('particle');
+      const s = Math.random() * 7 + 4;
+      p.style.cssText = `width:${s}px;height:${s}px;left:${Math.random()*100}vw;top:${Math.random()*100}vh;animation-duration:${Math.random()*6+6}s;animation-delay:${Math.random()*8}s;opacity:${Math.random()*.6+.2}`;
+      document.body.appendChild(p);
+    }
+  </script>
+</body>
+</html>

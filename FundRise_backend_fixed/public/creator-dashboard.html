@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FundRise – Creator Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root { --green:#2ecc71; --green-dark:#27ae60; --text:#2c3e50; --muted:#7f8c8d; --bg:#f4f8fb; --accent:#3498db; --warn:#e67e22; --danger:#e74c3c; --purple:#9b59b6; }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    nav { background:linear-gradient(135deg,#87CEEB,#74b9e8); padding:0 24px; height:64px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 2px 16px rgba(0,0,0,.1); }
+    .nav-brand { font-family:'Playfair Display',serif; font-size:22px; color:var(--green-dark); text-decoration:none; display:flex; align-items:center; gap:8px; }
+    .nav-right { display:flex; align-items:center; gap:12px; }
+    .nav-btn { padding:8px 18px; border-radius:24px; font-size:13px; font-weight:600; cursor:pointer; border:none; font-family:'DM Sans',sans-serif; transition:all .2s; text-decoration:none; display:inline-block; }
+    .nav-btn.outline { background:transparent; border:2px solid white; color:white; }
+    .nav-btn.outline:hover { background:white; color:var(--green-dark); }
+    .nav-btn.solid { background:var(--green); color:white; }
+    .nav-btn.solid:hover { background:var(--green-dark); }
+    .main { max-width:1100px; margin:0 auto; padding:32px 24px 60px; }
+    .page-header { margin-bottom:28px; }
+    .page-header h1 { font-family:'Playfair Display',serif; font-size:28px; }
+    .page-header p { font-size:14px; color:var(--muted); margin-top:4px; }
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
+    .stat-card { background:white; border-radius:16px; padding:20px; box-shadow:0 2px 12px rgba(0,0,0,.06); border-left:4px solid transparent; }
+    .stat-card.green { border-left-color:var(--green); }
+    .stat-card.blue  { border-left-color:var(--accent); }
+    .stat-card.orange{ border-left-color:var(--warn); }
+    .stat-card.purple{ border-left-color:var(--purple); }
+    .stat-label { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+    .stat-value { font-family:'Playfair Display',serif; font-size:26px; font-weight:800; }
+    .section-title { font-size:16px; font-weight:700; margin-bottom:16px; }
+    .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+    .filter-btn { padding:6px 14px; border-radius:20px; border:2px solid #eee; background:white; font-size:12px; font-weight:600; color:var(--muted); cursor:pointer; transition:all .2s; font-family:'DM Sans',sans-serif; }
+    .filter-btn.active, .filter-btn:hover { border-color:var(--green); color:var(--green-dark); background:rgba(46,204,113,.06); }
+    .campaigns-list { display:flex; flex-direction:column; gap:16px; }
+    .camp-card { background:white; border-radius:18px; padding:20px 24px; box-shadow:0 2px 12px rgba(0,0,0,.06); display:grid; grid-template-columns:auto 1fr auto; gap:16px; align-items:center; transition:box-shadow .2s; }
+    .camp-card:hover { box-shadow:0 6px 24px rgba(0,0,0,.1); }
+    .camp-emoji { font-size:44px; width:64px; height:64px; border-radius:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .camp-info { min-width:0; }
+    .camp-name { font-family:'Playfair Display',serif; font-size:17px; font-weight:700; margin-bottom:4px; }
+    .camp-meta { font-size:12px; color:var(--muted); margin-bottom:10px; }
+    .progress-bar { height:7px; background:#eee; border-radius:4px; overflow:hidden; margin:0 0 6px; }
+    .progress-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--green),var(--green-dark)); }
+    .progress-stats { display:flex; justify-content:space-between; font-size:12px; }
+    .prog-raised { font-weight:700; color:var(--green-dark); }
+    .camp-actions { display:flex; flex-direction:column; gap:8px; align-items:flex-end; flex-shrink:0; }
+    .badge { padding:5px 12px; border-radius:20px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+    .badge.active    { background:rgba(46,204,113,.12); color:var(--green-dark); }
+    .badge.pending   { background:rgba(230,126,34,.12);  color:var(--warn); }
+    .badge.rejected  { background:rgba(231,76,60,.12);   color:var(--danger); }
+    .badge.completed { background:rgba(52,152,219,.12);  color:var(--accent); }
+    .view-btn { padding:8px 16px; border-radius:20px; background:rgba(46,204,113,.1); color:var(--green-dark); border:none; font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .2s; text-decoration:none; }
+    .view-btn:hover { background:var(--green); color:white; }
+    .donors-section { margin-top:32px; }
+    .donors-table { background:white; border-radius:18px; padding:20px; box-shadow:0 2px 12px rgba(0,0,0,.06); }
+    table { width:100%; border-collapse:collapse; }
+    th { text-align:left; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; padding:10px 12px; border-bottom:2px solid #f0f0f0; }
+    td { padding:12px; font-size:13px; border-bottom:1px solid #f8f8f8; vertical-align:middle; }
+    tr:last-child td { border-bottom:none; }
+    .empty-state { text-align:center; padding:60px 24px; color:var(--muted); }
+    .empty-state .emoji { font-size:48px; margin-bottom:12px; }
+    .empty-state p { font-size:15px; margin-bottom:20px; }
+    .spinner { width:36px; height:36px; border:4px solid #dde3e8; border-top-color:var(--green); border-radius:50%; animation:spin .8s linear infinite; margin:60px auto; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(80px); background:#2c3e50; color:white; padding:12px 28px; border-radius:30px; font-size:14px; font-weight:500; transition:transform .3s; z-index:999; }
+    .toast.show { transform:translateX(-50%) translateY(0); }
+    .toast.success { background:var(--green-dark); }
+    @media(max-width:700px) {
+      .stats-grid { grid-template-columns:1fr 1fr; }
+      .camp-card { grid-template-columns:auto 1fr; }
+      .camp-actions { flex-direction:row; grid-column:1/-1; }
+    }
+    @media(max-width:480px) { .stats-grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="index.html">🌱 FundRise</a>
+  <div class="nav-right">
+    <span style="font-size:13px;color:rgba(255,255,255,.9)" id="navUser"></span>
+    <a class="nav-btn solid" href="create-campaign.html">+ New Campaign</a>
+    <a class="nav-btn outline" href="index.html">Browse</a>
+    <a class="nav-btn outline" href="login.html" onclick="localStorage.clear()">Logout</a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="page-header">
+    <h1 id="welcomeTitle">My Dashboard 📊</h1>
+    <p id="welcomeSub">Track your campaigns and donations in real time</p>
+  </div>
+
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card green"><div class="stat-label">Total Raised</div><div class="stat-value" id="st-raised">—</div></div>
+    <div class="stat-card blue"><div class="stat-label">My Campaigns</div><div class="stat-value" id="st-total">—</div></div>
+    <div class="stat-card orange"><div class="stat-label">Active Now</div><div class="stat-value" id="st-active">—</div></div>
+    <div class="stat-card purple"><div class="stat-label">Total Donors</div><div class="stat-value" id="st-donors">—</div></div>
+  </div>
+
+  <div class="section-title">My Campaigns</div>
+  <div class="filter-bar" id="filterBar">
+    <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('active',this)">Active</button>
+    <button class="filter-btn" onclick="setFilter('pending',this)">Pending</button>
+    <button class="filter-btn" onclick="setFilter('completed',this)">Completed</button>
+    <button class="filter-btn" onclick="setFilter('rejected',this)">Rejected</button>
+  </div>
+  <div id="campaignsList"><div class="spinner"></div></div>
+
+  <div class="donors-section">
+    <div class="section-title">Recent Donations Across My Campaigns</div>
+    <div class="donors-table"><table id="recentDonors"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">Loading…</td></tr></table></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API  = 'http://localhost:3000/api';
+  const role = localStorage.getItem('fundrise_role');
+  const uid  = localStorage.getItem('fundrise_uid');
+  const user = localStorage.getItem('fundrise_user') || 'Creator';
+
+  // Guard: only Campaign creators
+  if (!role || role !== 'Campaign') window.location.href = 'login.html';
+
+  document.getElementById('navUser').textContent = `Hi, ${user} 👋`;
+  document.getElementById('welcomeTitle').textContent = `Welcome back, ${user}! 📊`;
+
+  let allCampaigns = [];
+  let currentFilter = 'all';
+
+  const statusBadge = s => {
+    const map = { active:'✅ Active', pending:'⏳ Pending', rejected:'❌ Rejected', completed:'🏁 Completed' };
+    return `<span class="badge ${s}">${map[s] || s}</span>`;
+  };
+
+  async function loadDashboard() {
+    if (!uid) { document.getElementById('campaignsList').innerHTML = '<div class="empty-state"><div class="emoji">⚠️</div><p>User ID not found. Please log in again.</p></div>'; return; }
+    try {
+      const res  = await fetch(`${API}/campaigns/creator/${uid}`);
+      const data = await res.json();
+      if (!data.success) throw new Error('API error');
+      allCampaigns = data.campaigns;
+      computeStats();
+      renderCampaigns();
+      loadRecentDonations();
+    } catch(e) {
+      document.getElementById('campaignsList').innerHTML = '<div class="empty-state"><div class="emoji">⚠️</div><p>Could not load campaigns. Is the server running?</p></div>';
+    }
+  }
+
+  function computeStats() {
+    const totalRaised  = allCampaigns.reduce((s,c) => s + parseFloat(c.raised||0), 0);
+    const activeCount  = allCampaigns.filter(c => c.status==='active').length;
+    const donorPromises = allCampaigns.map(c =>
+      fetch(`${API}/campaigns/${c.id}/donations`).then(r=>r.json()).then(d=>d.success?d.donations:[]).catch(()=>[])
+    );
+    document.getElementById('st-raised').textContent  = '₹' + totalRaised.toLocaleString('en-IN');
+    document.getElementById('st-total').textContent   = allCampaigns.length;
+    document.getElementById('st-active').textContent  = activeCount;
+    // Count unique donors across all campaigns
+    Promise.all(donorPromises).then(donationArrays => {
+      const allDonors = donationArrays.flat();
+      document.getElementById('st-donors').textContent = allDonors.length;
+    });
+  }
+
+  function setFilter(f, el) {
+    document.querySelectorAll('#filterBar .filter-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    currentFilter = f;
+    renderCampaigns();
+  }
+
+  function renderCampaigns() {
+    const list = currentFilter === 'all' ? allCampaigns : allCampaigns.filter(c => c.status === currentFilter);
+    const el   = document.getElementById('campaignsList');
+
+    if (!allCampaigns.length) {
+      el.innerHTML = `<div class="empty-state">
+        <div class="emoji">🌱</div>
+        <p>You haven't created any campaigns yet.</p>
+        <a class="view-btn" href="create-campaign.html">Start your first campaign</a>
+      </div>`; return;
+    }
+
+    if (!list.length) {
+      el.innerHTML = `<div class="empty-state"><div class="emoji">😕</div><p>No campaigns with status "${currentFilter}".</p></div>`; return;
+    }
+
+    el.innerHTML = `<div class="campaigns-list">` + list.map(c => {
+      const pct = Math.min(100, Math.round(c.raised / c.goal * 100));
+      return `
+      <div class="camp-card">
+        <div class="camp-emoji" style="background:${c.color}">${c.emoji}</div>
+        <div class="camp-info">
+          <div class="camp-name">${c.title}</div>
+          <div class="camp-meta">📂 ${c.category} &nbsp;·&nbsp; ⏳ ${c.days_left} days left &nbsp;·&nbsp; 🎯 ₹${Number(c.goal).toLocaleString('en-IN')} goal</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <div class="progress-stats">
+            <span class="prog-raised">₹${Number(c.raised).toLocaleString('en-IN')} raised</span>
+            <span style="color:var(--muted)">${pct}%</span>
+          </div>
+        </div>
+        <div class="camp-actions">
+          ${statusBadge(c.status)}
+          <a class="view-btn" href="campaign.html?id=${c.id}">View →</a>
+        </div>
+      </div>`;
+    }).join('') + `</div>`;
+  }
+
+  async function loadRecentDonations() {
+    if (!allCampaigns.length) {
+      document.getElementById('recentDonors').innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:30px">No donations yet.</td></tr>`;
+      return;
+    }
+    const promises = allCampaigns.map(c =>
+      fetch(`${API}/campaigns/${c.id}/donations`).then(r=>r.json())
+        .then(d => d.success ? d.donations.map(don => ({...don, campaign: c.title})) : [])
+        .catch(() => [])
+    );
+    const all = (await Promise.all(promises)).flat()
+      .sort((a,b) => new Date(b.donated_at) - new Date(a.donated_at))
+      .slice(0, 20);
+
+    if (!all.length) {
+      document.getElementById('recentDonors').innerHTML = `<thead><tr><th>Donor</th><th>Campaign</th><th>UTR ID</th><th>Amount</th><th>Date</th></tr></thead><tbody><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:30px">No donations yet.</td></tr></tbody>`;
+      return;
+    }
+
+    document.getElementById('recentDonors').innerHTML = `
+      <thead><tr><th>Donor</th><th>Campaign</th><th>UTR ID</th><th>Amount</th><th>Date</th></tr></thead>
+      <tbody>` + all.map(d => `
+        <tr>
+          <td style="font-weight:600">👤 ${d.donor_name}</td>
+          <td style="color:var(--muted)">${d.campaign}</td>
+          <td style="font-family:monospace;font-size:12px;font-weight:bold;color:#34495e">${d.utr_id || '—'}</td>
+          <td style="font-weight:700;color:var(--green-dark)">₹${Number(d.amount).toLocaleString('en-IN')}</td>
+          <td style="color:var(--muted);font-size:12px">${new Date(d.donated_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</td>
+        </tr>`).join('') + `</tbody>`;
+  }
+
+  function showToast(msg, type='') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast ' + type + ' show';
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  loadDashboard();
+</script>
+</body>
+</html>
